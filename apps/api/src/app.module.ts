@@ -4,6 +4,7 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { HealthModule } from "./health/health.module";
+import { LlmModule } from "./llm/llm.module";
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { HealthModule } from "./health/health.module";
       }),
     }),
     HealthModule,
+    LlmModule,
   ],
   controllers: [AppController],
   providers: [AppService],
