@@ -1,0 +1,7 @@
+CREATE EXTENSION IF NOT EXISTS vector;
+
+CREATE DATABASE entitle_test;
+
+\c entitle_test
+
+CREATE EXTENSION IF NOT EXISTS vector;

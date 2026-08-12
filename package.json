@@ -1,0 +1,23 @@
+{
+  "name": "entitle",
+  "version": "0.0.1",
+  "packageManager": "npm@11.4.1",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "@biomejs/biome": "2.5.8",
+    "turbo": "^2.10.9"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "test": "turbo run test",
+    "check": "biome check .",
+    "check:fix": "biome check --write .",
+    "db:up": "docker compose -f ./infra/database/docker-compose.yml up -d",
+    "db:down": "docker compose -f ./infra/database/docker-compose.yml down"
+  }
+}
