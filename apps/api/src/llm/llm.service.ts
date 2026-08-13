@@ -1,18 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { z } from "zod";
-
-// ---------------------------------------------------------------------------
-// Types for what we SEND to the model.
-// These are plain TypeScript types: compile-time only, erased when built.
-// ---------------------------------------------------------------------------
-
-export type ChatRole = "system" | "user" | "assistant";
-
-export interface ChatMessage {
-  role: ChatRole;
-  content: string;
-}
+import { ChatMessage } from "./llm.types";
 
 // ---------------------------------------------------------------------------
 // Schema for what we EXPECT BACK.

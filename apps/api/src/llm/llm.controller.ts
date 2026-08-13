@@ -1,7 +1,8 @@
 import { Body, Controller, Post, Res } from "@nestjs/common";
 import type { Response } from "express";
 import { z } from "zod";
-import { ChatMessage, LlmService } from "./llm.service";
+import { LlmService } from "./llm.service";
+import type { ChatMessage } from "./llm.types";
 
 const SYSTEM_PROMPT =
   "Stick to UK welfare. Do not invent figures. Be honest if you do not know or are uncertain.";
