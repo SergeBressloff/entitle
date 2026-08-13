@@ -55,6 +55,13 @@ const StreamChunkSchema = z.object({
     .min(1),
 });
 
+// Health check type for the ping endpoint. The server returns a JSON
+// object with an "ok" boolean and an optional "message" string.
+export interface PingResult {
+  ok: boolean;
+  message?: string;
+}
+
 @Injectable()
 export class LlmService {
   private readonly logger = new Logger(LlmService.name);
@@ -276,5 +283,50 @@ export class LlmService {
     // The grammar guarantees the SHAPE. It says nothing about whether the
     // values are sensible, so validate anyway.
     return schema.parse(json);
+  }
+
+  /**
+   * Check whether llama-server is reachable and ready to serve.
+   *
+   * On failure the reason is returned as well as logged, so the health
+   * endpoint can report it rather than leaving it buried in the logs.
+   * The three failure modes are worth distinguishing: connection refused
+   * (not running), timeout (running but wedged), and an HTTP error —
+   * llama.cpp answers 503 with "Loading model" while weights are still
+   * loading, which is temporary rather than broken.
+   */
+  async ping(): Promise<PingResult> {
+    const url = `${this.baseUrl}/health`;
+
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        // A health check must give a fast, definite answer. Without this,
+        // a wedged server would hang the whole /health endpoint.
+        signal: AbortSignal.timeout(2000),
+      });
+
+      if (!response.ok) {
+        // A response body can only be read once, so capture it rather than
+        // consuming it inside the log call.
+        const body = (await response.text()).trim();
+        const message = `llama-server returned ${response.status}${
+          body ? `: ${body.slice(0, 200)}` : ""
+        }`;
+
+        this.logger.warn(message);
+        return { ok: false, message };
+      }
+
+      return { ok: true };
+    } catch (error) {
+      // JavaScript allows throwing anything, so a caught value is `unknown`
+      // until proven otherwise — the same principle as validating with Zod.
+      const cause = error instanceof Error ? error.message : String(error);
+      const message = `llama-server unreachable: ${cause}`;
+
+      this.logger.warn(message);
+      return { ok: false, message };
+    }
   }
 }
