@@ -1,55 +1,14 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { z } from "zod";
-import { ChatMessage } from "./llm.types";
-
-// ---------------------------------------------------------------------------
-// Schema for what we EXPECT BACK.
-// This is a Zod schema: it exists at runtime and actually checks the data.
-// Only the fields we use are described; unknown fields are ignored.
-// ---------------------------------------------------------------------------
-
-const ChatCompletionSchema = z.object({
-  choices: z
-    .array(
-      z.object({
-        message: z.object({
-          role: z.string(),
-          // Can be null when the model returns tool calls instead of text.
-          content: z.string().nullable(),
-        }),
-        finish_reason: z.string().nullable(),
-      }),
-    )
-    .min(1),
-});
-
-// Derive the TypeScript type from the schema, so the shape is written once.
-export type ChatCompletion = z.infer<typeof ChatCompletionSchema>;
-
-// Streaming sends many small chunks with a different shape: `delta` (the new
-// fragment) rather than `message` (the whole reply). `content` is optional
-// because the first chunk carries only the role, and the last carries only
-// finish_reason.
-const StreamChunkSchema = z.object({
-  choices: z
-    .array(
-      z.object({
-        delta: z.object({
-          content: z.string().nullish(),
-        }),
-        finish_reason: z.string().nullable().optional(),
-      }),
-    )
-    .min(1),
-});
-
-// Health check type for the ping endpoint. The server returns a JSON
-// object with an "ok" boolean and an optional "message" string.
-export interface PingResult {
-  ok: boolean;
-  message?: string;
-}
+import {
+  AssistantReply,
+  ChatCompletionSchema,
+  ChatMessage,
+  PingResult,
+  StreamChunkSchema,
+  ToolDefinition,
+} from "./llm.types";
 
 @Injectable()
 export class LlmService {
@@ -317,5 +276,50 @@ export class LlmService {
       this.logger.warn(message);
       return { ok: false, message };
     }
+  }
+
+  async completeWithTools(
+    messages: ChatMessage[],
+    tools: ToolDefinition[],
+  ): Promise<AssistantReply> {
+    const url = `${this.baseUrl}/v1/chat/completions`;
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messages,
+        tools,
+        // Google's defaults for Gemma 4. Not arbitrary.
+        temperature: 1.0,
+        top_p: 0.95,
+        top_k: 64,
+        stream: false,
+      }),
+    });
+
+    // fetch only rejects on network failure. A 500 is a fulfilled promise.
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(
+        `llama-server returned ${response.status}: ${body.slice(0, 500)}`,
+      );
+    }
+
+    // `unknown`, not `any` — nothing may touch it until it has been validated.
+    const raw: unknown = await response.json();
+
+    // Throws immediately, at the boundary, if the shape is wrong.
+    const parsed = ChatCompletionSchema.parse(raw);
+
+    const choice = parsed.choices[0];
+
+    this.logger.log(`Completion finished: ${choice.finish_reason}`);
+
+    return {
+      content: choice.message.content,
+      tool_calls: choice.message.tool_calls ?? undefined,
+      finish_reason: choice.finish_reason,
+    };
   }
 }
