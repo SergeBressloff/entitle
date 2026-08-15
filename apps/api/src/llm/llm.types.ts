@@ -25,6 +25,7 @@ export type ChatMessage =
 // This is a Zod schema: it exists at runtime and actually checks the data.
 // Only the fields we use are described; unknown fields are ignored.
 // ---------------------------------------------------------------------------
+
 export const ToolCallSchema = z.object({
   id: z.string(),
   type: z.literal("function"),

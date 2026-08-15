@@ -3,7 +3,7 @@ import { defineTool } from "./tool.types";
 
 const parameters = z.object({
   benefit: z
-    .enum(["universal_credit", "pip"])
+    .enum(["universal_credit"])
     .describe(
       "The benefit to look up. Currently supported: 'universal_credit', 'pip'",
     ),
@@ -43,7 +43,7 @@ const execute = async (args: z.infer<typeof parameters>) => {
   if (!benefitAmounts[benefit][tax_year]) {
     return {
       found: false,
-      reason: `Tax year ${tax_year} not found for benefit ${benefit}.`,
+      reason: `tax_year ${tax_year} not found for benefit ${benefit}.`,
     };
   }
 
@@ -60,7 +60,7 @@ const execute = async (args: z.infer<typeof parameters>) => {
   if (amount_gbp === undefined) {
     return {
       found: false,
-      reason: `Amount for benefit ${benefit}, tax year ${tax_year}, and claimant type ${claimant_type} not found.`,
+      reason: `Amount for benefit ${benefit}, tax_year ${tax_year}, and claimant_type ${claimant_type} not found.`,
     };
   }
 
@@ -76,7 +76,7 @@ const execute = async (args: z.infer<typeof parameters>) => {
 export const lookupBenefitRateTool = defineTool({
   name: "lookup_benefit_rate",
   description:
-    "Look up the current statutory rate for a UK benefit. Use this for any question about benefit amounts or how much someone would receive. Do not answer from memory; rates change every tax year.",
+    "Look up the current statutory rate for a UK benefit. Use this for any question about benefit amounts or how much someone would receive. Do not answer from memory; rates change every tax year. Does not check whether someone qualifies.",
   parameters,
   execute,
 });

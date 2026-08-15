@@ -10,16 +10,17 @@ No hosted model API. Everything runs on the machine it's deployed on.
 
 ## Status
 
-**Week 1 of 4 — in progress.** Currently a monorepo skeleton with a working API and database.
+**Week 1 of 4 complete.** The agent answers questions using tools, on local inference.
 
 | | |
 |---|---|
-| ✅ | Local inference verified — Gemma 4 26B-A4B via llama.cpp, with function calling end to end |
-| ✅ | Monorepo, NestJS API, Postgres 17 + pgvector, health check |
-| 🔨 | Tool-calling agent loop |
-| ⬜ | Document ingestion and retrieval |
-| ⬜ | Guardrails, human handoff, evaluation harness |
-| ⬜ | MCP server and web UI |
+| ✅ | Local inference — Gemma 4 26B-A4B via llama.cpp, benchmarked and function-calling verified |
+| ✅ | Monorepo, NestJS API, Postgres 17 + pgvector, health checks for both dependencies |
+| ✅ | LLM client — plain, streaming, and schema-constrained structured output |
+| ✅ | Tool-calling agent loop, with two tools and every error path under test |
+| ⬜ | Document ingestion and retrieval *(week 2)* |
+| ⬜ | Guardrails, human handoff, evaluation harness *(week 3)* |
+| ⬜ | MCP server and web UI *(week 4)* |
 
 ## Why this exists
 
