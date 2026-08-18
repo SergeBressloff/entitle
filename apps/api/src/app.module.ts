@@ -5,6 +5,7 @@ import { AgentModule } from "./agent/agent.module";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { HealthModule } from "./health/health.module";
+import { IngestModule } from "./ingest/ingest.module";
 import { LlmModule } from "./llm/llm.module";
 
 @Module({
@@ -22,6 +23,7 @@ import { LlmModule } from "./llm/llm.module";
     HealthModule,
     LlmModule,
     AgentModule,
+    IngestModule,
   ],
   controllers: [AppController],
   providers: [AppService],
