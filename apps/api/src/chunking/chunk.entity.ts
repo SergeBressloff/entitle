@@ -61,4 +61,23 @@ export class Chunk {
 
   @CreateDateColumn({ type: "timestamptz", name: "created_at" })
   createdAt: Date;
+
+  @Column({ type: "vector", length: 768, name: "embedding", nullable: true })
+  embedding: number[] | null;
+
+  @Column({ type: "text", name: "embedding_model", nullable: true })
+  embeddingModel: string | null;
+
+  @Column({ type: "timestamptz", name: "embedded_at", nullable: true })
+  embeddedAt: Date | null;
 }
+
+export type NewChunk = Omit<
+  Chunk,
+  | "id"
+  | "createdAt"
+  | "document"
+  | "embedding"
+  | "embeddingModel"
+  | "embeddedAt"
+>;

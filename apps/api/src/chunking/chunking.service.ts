@@ -3,7 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import { DataSource, Repository } from "typeorm";
 import { GovukDocument } from "../ingest/document.entity";
-import { Chunk } from "./chunk.entity";
+import { Chunk, NewChunk } from "./chunk.entity";
 import { extractParts } from "./extract-parts";
 import { htmlToMarkdown } from "./html-to-markdown";
 import { splitMarkdown } from "./split";
@@ -44,13 +44,11 @@ export class ChunkingService {
     this.govukBaseUrl = govukBaseUrl.replace(/\/$/, "");
   }
 
-  private buildChunks(
-    document: GovukDocument,
-  ): Omit<Chunk, "id" | "createdAt" | "document">[] {
+  private buildChunks(document: GovukDocument): NewChunk[] {
     // 1. pull details out of document.raw and call extractParts
     const parts = extractParts(document.schemaName, document.raw.details);
 
-    const rows: Omit<Chunk, "id" | "createdAt" | "document">[] = [];
+    const rows: NewChunk[] = [];
     let chunkIndex = 0;
 
     // 2. for each part: htmlToMarkdown(part.html), then splitMarkdown
@@ -138,6 +136,12 @@ export class ChunkingService {
         const chunkCount = await this.chunkDocument(document);
         summary.documentsChunked += 1;
         summary.chunksCreated += chunkCount;
+
+        if (chunkCount === 0) {
+          this.logger.warn(
+            `${document.basePath} (${document.schemaName}) produced no chunks — either it genuinely has no body, or extractParts was given the wrong shape`,
+          );
+        }
       } catch (error) {
         const reason = error instanceof Error ? error.message : String(error);
         summary.failed += 1;
