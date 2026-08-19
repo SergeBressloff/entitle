@@ -40,8 +40,15 @@ export class EmbeddingApiService {
 
       // 8. throw on !response.ok, including response.text() in the message
       if (!response.ok) {
+        const body = await response.text();
+
+        this.logger.warn(
+          `Embedding batch at offset ${start} (${slice.length} texts) failed: ` +
+            `${response.status} ${body.slice(0, 200)}`,
+        );
+
         throw new Error(
-          `HTTP error! status: ${response.status}, body: ${await response.text()}`,
+          `llama-server returned ${response.status}: ${body.slice(0, 500)}`,
         );
       }
 
